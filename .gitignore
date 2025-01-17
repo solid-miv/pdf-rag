@@ -1,0 +1,5 @@
+# exlcude virtualenv
+virtenv/
+
+# exclude environment variables with API key
+.env
