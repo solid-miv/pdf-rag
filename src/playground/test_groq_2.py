@@ -1,5 +1,5 @@
 """
-Run the file using the command: python src/test_groq_2.py from the root directory of the project.
+Run the file using the command: python src/playground/test_groq_2.py from the root directory of the project.
 """
 import os
 import sys
@@ -22,7 +22,7 @@ client = AsyncGroq(
 
 async def main():
     chat_streaming = await client.chat.completions.create(
-        messages = [{"role": "system", "content": "ou are a psychiatrist helping young minds"},
+        messages = [{"role": "system", "content": "You are a psychiatrist helping young minds"},
                     {"role": "user", "content": "I panicked during the test, even though I knew everything on the test paper"},
         ],
         model="llama-3.3-70b-versatile",
