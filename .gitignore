@@ -3,3 +3,6 @@ virtenv/
 
 # exclude environment variables with API key
 .env
+
+# exclude node_modules, since it's too large
+frontend/node_modules/

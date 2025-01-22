@@ -1,8 +1,3 @@
-"""
-Run the file using the command: python src/playground/test_groq.py from the root directory of the project.
-
-Check https://console.groq.com/docs/models for the list of available models.
-"""
 import asyncio
 import os
 

@@ -1,6 +1,3 @@
-"""
-Run the file using the command: python src/playground/test_groq_2.py from the root directory of the project.
-"""
 import os
 import sys
 import asyncio

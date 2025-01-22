@@ -1,10 +1,13 @@
 """
-Run the script using the command: python src/playground/groq_llm_client.py from the root directory of the project.
+Run the script using the command: python backend/groq_llm_client.py from the root directory of the project.
+
+Check https://console.groq.com/docs/models for the list of available models.
 """
 # TODO: how to implement streaming?
 # TODO: how to control temperature, max_tokens, top_p, and stop?
 # TODO: test different embedding models
 import os
+import time
 from dotenv import load_dotenv
 
 from llama_index.llms.groq import Groq
@@ -20,17 +23,22 @@ load_dotenv()
 
 
 llm = Groq(model="llama-3.3-70b-versatile", api_key=os.getenv("GROQ_API_KEY"))
-embed_model = HuggingFaceEmbedding(model_name="mixedbread-ai/mxbai-embed-large-v1")
-# embed_model = HuggingFaceEmbedding(model_name="sentence-transformers/all-MiniLM-L6-v2")  # speed/size tradeoff
+# embed_model = HuggingFaceEmbedding(model_name="mixedbread-ai/mxbai-embed-large-v1")
+embed_model = HuggingFaceEmbedding(model_name="sentence-transformers/all-MiniLM-L6-v2")  # speed/size tradeoff
 # embed_model = HuggingFaceEmbedding(model_name="ibm-granite/granite-embedding-278m-multilingual")
 
 Settings.llm = llm
 Settings.embed_model = embed_model
 
-docs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../storage/docs"))
-de_tools_blog = SimpleDirectoryReader(docs_path, required_exts=[".pdf", ".docx"]).load_data()
+start_time = time.time()
 
+docs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../storage/docs"))
+de_tools_blog = SimpleDirectoryReader(docs_path, required_exts=[".pdf", ".docx"]).load_data()
+print(f"Loading documents took {time.time() - start_time:.2f} seconds")
+
+index_start = time.time()
 index = VectorStoreIndex.from_documents(de_tools_blog)
+print(f"Creating index took {time.time() - index_start:.2f} seconds")
 memory = ChatMemoryBuffer.from_defaults(token_limit=3900)
 system_prompt = "Search for an answer in the documents. Specify the name of the document if you found an answer and stop the response. Otherwise, use general knowledge and explicitly say that the answer is based on the general knowledge and not the docs. Do not name all the docs in this case."
 
@@ -41,9 +49,10 @@ chat_engine = CondensePlusContextChatEngine(
     system_prompt=system_prompt,
 )
 
+chat_start = time.time()
 response = chat_engine.chat(
     # "Who was elected as a president of Ukraine in 2019?",
     "What vitamin is essential for the absorption of calcium?",
 )
-
+print(f"Chat response took {time.time() - chat_start:.2f} seconds")
 print(str(response))
