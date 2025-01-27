@@ -1,0 +1,38 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - backend_storage:/app/storage
+      - ./backend/.env:/app/.env:ro
+    env_file:
+      - ./backend/.env
+    environment:
+      - FLASK_ENV=development
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app:ro
+      - /app/node_modules
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      - VITE_API_URL=http://backend:5000
+    mem_limit: "512m"
+    mem_reservation: "256m"
+
+volumes:
+  backend_storage:
+    driver: local

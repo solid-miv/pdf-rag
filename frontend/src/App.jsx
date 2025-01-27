@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { Container, Typography, Paper } from '@mui/material';
+import { Container, Typography } from '@mui/material';
 import QueryInput from './components/QueryInput';
 import FileUpload from './components/FileUpload';
 import DocumentList from './components/DocumentList';
+import ResponseDisplay from './components/ResponseDisplay';
 import axios from 'axios';
 
 const App = () => {
   const [documents, setDocuments] = useState([]);
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
+  const [totalStorageSize, setTotalStorageSize] = useState(0);
 
   const handleFileUpload = async (files) => {
     const formData = new FormData();
@@ -22,7 +24,12 @@ const App = () => {
           'Content-Type': 'multipart/form-data',
         },
       });
-      setDocuments(prev => [...prev, ...files]);
+      const newDocs = files.map(file => ({
+        name: file.name,
+        size: file.size
+      }));
+      setDocuments(prev => [...prev, ...newDocs]);
+      setTotalStorageSize(prev => prev + files.reduce((acc, file) => acc + file.size, 0));
     } catch (error) {
       console.error('Upload error:', error);
     }
@@ -30,13 +37,47 @@ const App = () => {
 
   const handleQuerySubmit = async (query) => {
     setLoading(true);
+    setResponse('');
     try {
-      const { data } = await axios.post('/api/query', { query });
-      setResponse(data.answer);
+      const response = await fetch('/api/query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query }),
+      });
+  
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+  
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+  
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+        
+        lines.forEach(line => {
+          if (line.startsWith('data: ')) {
+            const text = line.slice(6);
+            setResponse(prev => prev + text);
+          }
+        });
+      }
     } catch (error) {
       console.error('Query error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteDocument = async (docIndex) => {
+    try {
+      await axios.delete(`/api/documents/${documents[docIndex].name}`);
+      setTotalStorageSize(prev => prev - documents[docIndex].size);
+      setDocuments(prev => prev.filter((_, i) => i !== docIndex));
+    } catch (error) {
+      console.error('Delete error:', error);
     }
   };
 
@@ -45,19 +86,16 @@ const App = () => {
       <Typography variant="h4" component="h1" gutterBottom>
         Document Q&A System
       </Typography>
-      <FileUpload onFileUpload={handleFileUpload} />
-      <DocumentList documents={documents} />
+      <FileUpload 
+        onFileUpload={handleFileUpload} 
+        currentStorageSize={totalStorageSize}
+      />
+      <DocumentList 
+        documents={documents} 
+        onDelete={handleDeleteDocument} 
+      />
       <QueryInput onSubmit={handleQuerySubmit} />
-      {response && (
-        <Paper sx={{ mt: 2, p: 2 }}>
-          <Typography variant="h6" gutterBottom>
-            Answer:
-          </Typography>
-          <Typography>
-            {loading ? 'Loading...' : response}
-          </Typography>
-        </Paper>
-      )}
+      <ResponseDisplay response={response} loading={loading} />
     </Container>
   );
 };
