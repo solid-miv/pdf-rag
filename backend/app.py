@@ -56,9 +56,17 @@ def process_query():
     try:
         def generate():
             for token in query_documents(data['query']):
+                # Format as Server-Sent Events
                 yield f"data: {token}\n\n"
                 
-        return Response(stream_with_context(generate()), mimetype='text/event-stream')
+        return Response(
+            stream_with_context(generate()),
+            mimetype='text/event-stream',
+            headers={
+                'Cache-Control': 'no-cache',
+                'Transfer-Encoding': 'chunked'
+            }
+        )
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

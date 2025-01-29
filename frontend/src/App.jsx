@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Container, Typography } from '@mui/material';
+import { Container, Typography, Grid, Box } from '@mui/material';
 import QueryInput from './components/QueryInput';
 import FileUpload from './components/FileUpload';
 import DocumentList from './components/DocumentList';
@@ -38,13 +38,12 @@ const App = () => {
   const handleQuerySubmit = async (query) => {
     setLoading(true);
     setResponse('');
+    
     try {
       const response = await fetch('/api/query', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query })
       });
   
       const reader = response.body.getReader();
@@ -82,21 +81,64 @@ const App = () => {
   };
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Document Q&A System
-      </Typography>
-      <FileUpload 
-        onFileUpload={handleFileUpload} 
-        currentStorageSize={totalStorageSize}
-      />
-      <DocumentList 
-        documents={documents} 
-        onDelete={handleDeleteDocument} 
-      />
-      <QueryInput onSubmit={handleQuerySubmit} />
-      <ResponseDisplay response={response} loading={loading} />
-    </Container>
+    <Box sx={{ backgroundColor: '#f5f5f5', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
+        <Typography 
+          variant="h4" 
+          component="h1" 
+          align="center" 
+          sx={{ 
+            mb: 4,
+            fontSize: { xs: '2rem', md: '2.5rem' },
+            textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
+          }}
+        >
+          RAG Assistant
+        </Typography>
+        <Grid container spacing={3}>
+          {/* Left Column - Document Management */}
+          <Grid item xs={12} md={4}>
+            <Box sx={{ position: 'sticky', top: '20px' }}>
+              <FileUpload 
+                onFileUpload={handleFileUpload} 
+                currentStorageSize={totalStorageSize}
+              />
+              <DocumentList 
+                documents={documents} 
+                onDelete={handleDeleteDocument} 
+              />
+            </Box>
+          </Grid>
+          
+          {/* Right Column - Q&A Interface */}
+          <Grid item xs={12} md={8}>
+            <Box sx={{ 
+              backgroundColor: 'white', 
+              p: 3, 
+              borderRadius: 2,
+              boxShadow: 1
+            }}>
+              <QueryInput onSubmit={handleQuerySubmit} />
+              <ResponseDisplay response={response} loading={loading} />
+            </Box>
+          </Grid>
+        </Grid>
+      </Container>
+      <Box 
+        component="footer" 
+        sx={{ 
+          py: 3, 
+          textAlign: 'center',
+          backgroundColor: '#1a237e',
+          color: 'white',
+          mt: 4
+        }}
+      >
+        <Typography variant="body2">
+          © 2025 Developed by solid_miv
+        </Typography>
+      </Box>
+    </Box>
   );
 };
 
