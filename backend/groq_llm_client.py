@@ -21,6 +21,8 @@ MODELS = {
     "gemma": "gemma2-9b-it"
 }
 
+SYSTEM_PROMPT = "Search for an answer in the documents. If you found an answer, specify the name of the document in format name.extension, mention that you found the asnwer in this document, stop the response. Otherwise, use your general knowledge and explicitly say that the answer is based on the it and not the docs. Do not name documents names in this case. Also do not mention document's name in case when only one document is uploaded"
+        
 llm = None
 chat_engine = None
 memory = None
@@ -62,8 +64,7 @@ def setup_rag_system(model_key="llama"):
         )
         
         memory = ChatMemoryBuffer.from_defaults(token_limit=3900)
-        system_prompt = "Search for an answer in the documents. If you found an answer, specify the name of the document in format name.extension, mention that you found the asnwer in this document, stop the response. Otherwise, use your general knowledge and explicitly say that the answer is based on the it and not the docs. Do not name documents names in this case."
-        
+        system_prompt = SYSTEM_PROMPT
         chat_engine = CondensePlusContextChatEngine.from_defaults(
             retriever=index.as_retriever(),
             memory=memory,
