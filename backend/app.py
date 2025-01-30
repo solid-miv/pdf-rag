@@ -2,7 +2,7 @@ import os
 from flask import Flask, request, jsonify, Response, stream_with_context
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
-from groq_llm_client import setup_rag_system, query_documents
+from groq_llm_client import setup_rag_system, query_documents, MODELS
 
 
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10mb in bytes
@@ -19,6 +19,29 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@app.route('/api/models', methods=['GET'])
+def get_models():
+    return jsonify(MODELS), 200
+
+
+@app.route('/api/model', methods=['POST'])
+def set_model():
+    data = request.json
+    if not data or 'model' not in data:
+        return jsonify({'error': 'No model specified'}), 400
+    
+    model_key = data['model']
+    if model_key not in MODELS:
+        return jsonify({'error': f'Invalid model. Choose from: {list(MODELS.keys())}'}), 400
+    
+    try:
+        setup_rag_system(model_key)
+        return jsonify({'message': f'Model switched to {MODELS[model_key]}'}), 200
+    except Exception as e:
+        print(f"Error switching model: {str(e)}")
+        return jsonify({'error': 'Failed to switch model'}), 500
 
 
 @app.route('/api/upload', methods=['POST'])
@@ -53,10 +76,14 @@ def process_query():
     if not data or 'query' not in data:
         return jsonify({'error': 'No query provided'}), 400
     
+    model_key = data.get('model', 'llama')
+    if model_key not in MODELS:
+        return jsonify({'error': f'Invalid model. Choose from: {list(MODELS.keys())}'}), 400
+    
     try:
+        setup_rag_system(model_key)  # check whether correct model is set
         def generate():
             for token in query_documents(data['query']):
-                # Format as Server-Sent Events
                 yield f"data: {token}\n\n"
                 
         return Response(
@@ -69,7 +96,7 @@ def process_query():
         )
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
+    
 
 @app.route('/health')
 def health_check():

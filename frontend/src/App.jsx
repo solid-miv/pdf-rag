@@ -4,6 +4,7 @@ import QueryInput from './components/QueryInput';
 import FileUpload from './components/FileUpload';
 import DocumentList from './components/DocumentList';
 import ResponseDisplay from './components/ResponseDisplay';
+import ModelSelector from './components/ModelSelector';
 import axios from 'axios';
 
 const App = () => {
@@ -11,6 +12,17 @@ const App = () => {
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
   const [totalStorageSize, setTotalStorageSize] = useState(0);
+  const [selectedModel, setSelectedModel] = useState('llama');
+
+  const handleModelChange = async (model) => {
+    setSelectedModel(model);
+    
+    try {
+      await axios.post('/api/model', { model });
+    } catch (error) {
+      console.error('Model change error:', error);
+    }
+  };
 
   const handleFileUpload = async (files) => {
     const formData = new FormData();
@@ -35,6 +47,16 @@ const App = () => {
     }
   };
 
+  const handleDeleteDocument = async (docIndex) => {
+    try {
+      await axios.delete(`/api/documents/${documents[docIndex].name}`);
+      setTotalStorageSize(prev => prev - documents[docIndex].size);
+      setDocuments(prev => prev.filter((_, i) => i !== docIndex));
+    } catch (error) {
+      console.error('Delete error:', error);
+    }
+  };
+
   const handleQuerySubmit = async (query) => {
     setLoading(true);
     setResponse('');
@@ -43,7 +65,10 @@ const App = () => {
       const response = await fetch('/api/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query })
+        body: JSON.stringify({ 
+          query,
+          model: selectedModel
+        })
       });
   
       const reader = response.body.getReader();
@@ -70,16 +95,6 @@ const App = () => {
     }
   };
 
-  const handleDeleteDocument = async (docIndex) => {
-    try {
-      await axios.delete(`/api/documents/${documents[docIndex].name}`);
-      setTotalStorageSize(prev => prev - documents[docIndex].size);
-      setDocuments(prev => prev.filter((_, i) => i !== docIndex));
-    } catch (error) {
-      console.error('Delete error:', error);
-    }
-  };
-
   return (
     <Box sx={{ backgroundColor: '#f5f5f5', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
@@ -96,9 +111,12 @@ const App = () => {
           RAG Assistant
         </Typography>
         <Grid container spacing={3}>
-          {/* Left Column - Document Management */}
           <Grid item xs={12} md={4}>
             <Box sx={{ position: 'sticky', top: '20px' }}>
+              <ModelSelector 
+                selectedModel={selectedModel}
+                onModelChange={handleModelChange}
+              />
               <FileUpload 
                 onFileUpload={handleFileUpload} 
                 currentStorageSize={totalStorageSize}
@@ -110,7 +128,6 @@ const App = () => {
             </Box>
           </Grid>
           
-          {/* Right Column - Q&A Interface */}
           <Grid item xs={12} md={8}>
             <Box sx={{ 
               backgroundColor: 'white', 
