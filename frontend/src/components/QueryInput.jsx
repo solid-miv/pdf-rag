@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { TextField, Button, Box } from '@mui/material';
+import { TextField, Button, Box, Typography } from '@mui/material';
 
 const QueryInput = ({ onSubmit }) => {
   const [query, setQuery] = useState('');
+  const [lastQuery, setLastQuery] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setLastQuery(query);
     onSubmit(query);
     setQuery('');
   };
@@ -24,9 +26,15 @@ const QueryInput = ({ onSubmit }) => {
         type="submit" 
         variant="contained" 
         fullWidth
+        sx={{ mb: 2 }}
       >
         Ask Question
       </Button>
+      {lastQuery && (
+        <Typography variant="body2" color="text.secondary">
+          Last question: {lastQuery}
+        </Typography>
+      )}
     </Box>
   );
 };
