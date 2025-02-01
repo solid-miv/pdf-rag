@@ -4,7 +4,6 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - backend_storage:/app/storage
       - ./backend/.env:/app/.env:ro
     env_file:
       - ./backend/.env
@@ -32,7 +31,3 @@ services:
       - VITE_API_URL=http://backend:5000
     mem_limit: "512m"
     mem_reservation: "256m"
-
-volumes:
-  backend_storage:
-    driver: local
