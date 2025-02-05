@@ -85,6 +85,13 @@ const App = () => {
           if (line.startsWith('data: ')) {
             const text = line.slice(6);
             setResponse(prev => prev + text);
+            
+            // Auto-clear warning after 5 seconds
+            if (text.includes("Please upload some documents first")) {
+              setTimeout(() => {
+                setResponse('');
+              }, 5000);
+            }
           }
         });
       }

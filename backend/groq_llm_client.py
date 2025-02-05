@@ -47,6 +47,8 @@ def setup_rag_system(model_key="llama"):
     docs_path = "/app/storage/docs"
     os.makedirs(docs_path, exist_ok=True)
     
+    chat_engine = None  # rebuild
+    
     if chat_engine is None or model_changed:
         try:
             documents = SimpleDirectoryReader(docs_path, required_exts=[".pdf", ".docx"]).load_data()
@@ -55,7 +57,7 @@ def setup_rag_system(model_key="llama"):
             print("No documents found. Using empty index.")
             documents = []
         
-        embed_model = HuggingFaceEmbedding(model_name="all-MiniLM-L6-v2")
+        embed_model = HuggingFaceEmbedding(model_name="all-MiniLM-L6-v2")  # size/time tradeoff
         Settings.embed_model = embed_model
         
         index = VectorStoreIndex.from_documents(
@@ -64,12 +66,11 @@ def setup_rag_system(model_key="llama"):
         )
         
         memory = ChatMemoryBuffer.from_defaults(token_limit=3900)
-        system_prompt = SYSTEM_PROMPT
         chat_engine = CondensePlusContextChatEngine.from_defaults(
             retriever=index.as_retriever(),
             memory=memory,
             llm=llm,
-            system_prompt=system_prompt,
+            system_prompt=SYSTEM_PROMPT,
             verbose=True
         )
 
@@ -77,6 +78,11 @@ def setup_rag_system(model_key="llama"):
 
 
 def query_documents(query):
+    docs_path = "/app/storage/docs"
+    if not os.listdir(docs_path):  # check whether the docs directory is empty
+        yield "Please upload some documents first. I cannot answer questions without any documents to reference."
+        return
+        
     if chat_engine is None:
         setup_rag_system()
     response = chat_engine.stream_chat(query)
