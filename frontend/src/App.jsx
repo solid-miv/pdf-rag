@@ -13,6 +13,7 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [totalStorageSize, setTotalStorageSize] = useState(0);
   const [selectedModel, setSelectedModel] = useState('llama');
+  const [deletingIndex, setDeletingIndex] = useState(null);
 
   const handleModelChange = async (model) => {
     setSelectedModel(model);
@@ -48,12 +49,15 @@ const App = () => {
   };
 
   const handleDeleteDocument = async (docIndex) => {
+    setDeletingIndex(docIndex);
     try {
       await axios.delete(`/api/documents/${documents[docIndex].name}`);
       setTotalStorageSize(prev => prev - documents[docIndex].size);
       setDocuments(prev => prev.filter((_, i) => i !== docIndex));
     } catch (error) {
       console.error('Delete error:', error);
+    } finally {
+      setDeletingIndex(null);
     }
   };
 
@@ -86,7 +90,6 @@ const App = () => {
             const text = line.slice(6);
             setResponse(prev => prev + text);
             
-            // Auto-clear warning after 5 seconds
             if (text.includes("Please upload some documents first")) {
               setTimeout(() => {
                 setResponse('');
@@ -130,7 +133,8 @@ const App = () => {
               />
               <DocumentList 
                 documents={documents} 
-                onDelete={handleDeleteDocument} 
+                onDelete={handleDeleteDocument}
+                deletingIndex={deletingIndex}
               />
             </Box>
           </Grid>
