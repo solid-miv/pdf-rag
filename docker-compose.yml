@@ -1,8 +1,8 @@
 services:
   backend:
     build: ./backend
-    ports:
-      - "5000:5000"
+    expose:
+      - "5000"
     volumes:
       - ./backend/.env:/app/.env:ro
     env_file:
@@ -16,11 +16,13 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - internal
 
   frontend:
     build: ./frontend
     ports:
-      - "3000:3000"
+      - "8080:3000"
     volumes:
       - ./frontend:/app:ro
       - /app/node_modules
@@ -31,3 +33,9 @@ services:
       - VITE_API_URL=http://backend:5000
     mem_limit: "512m"
     mem_reservation: "256m"
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
