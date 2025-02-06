@@ -1,18 +1,15 @@
 import React from 'react';
-import { FormControl, InputLabel, Select, MenuItem, Box, Tooltip } from '@mui/material';
+import { FormControl, InputLabel, Select, MenuItem, Box } from '@mui/material';
 
 const models = {
   llama: {
-    label: 'LLaMA 70B',
-    info: 'Developed by Meta AI. A powerful open-source language model with 70B parameters, optimized for versatile tasks.'
+    label: 'LLaMA 70B'
   },
   mixtral: {
-    label: 'Mixtral 8x7B',
-    info: 'Developed by Mistral AI. A mixture-of-experts model combining 8 experts of 7B parameters each for efficient processing.'
+    label: 'Mixtral 8x7B'
   },
   gemma: {
-    label: 'Gemma 9B',
-    info: 'Developed by Google. A lightweight yet capable model with 9B parameters, optimized for instruction following.'
+    label: 'Gemma 9B'
   }
 };
 
