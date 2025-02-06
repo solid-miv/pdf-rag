@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TextField, Button, Box, Typography } from '@mui/material';
+import { TextField, Button, Box, Typography, InputAdornment } from '@mui/material';
 
 const QueryInput = ({ onSubmit }) => {
   const [query, setQuery] = useState('');
@@ -21,15 +21,20 @@ const QueryInput = ({ onSubmit }) => {
         placeholder="Enter your question..."
         variant="outlined"
         sx={{ mb: 2 }}
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <Button 
+                type="submit" 
+                variant="contained"
+                sx={{ height: '40px' }}
+              >
+                Ask
+              </Button>
+            </InputAdornment>
+          ),
+        }}
       />
-      <Button 
-        type="submit" 
-        variant="contained" 
-        fullWidth
-        sx={{ mb: 2 }}
-      >
-        Ask Question
-      </Button>
       {lastQuery && (
         <Typography variant="body2" color="text.secondary">
           Last question: {lastQuery}
